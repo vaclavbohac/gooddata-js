@@ -252,7 +252,7 @@ const dateFilterToWhere = f => {
     return { [dimensionUri]: { '$between': between, '$granularity': granularity } };
 };
 
-const metricToDefinition = metric => ({ element: get(metric, 'objectUri')});
+const metricToDefinition = metric => ({ element: get(metric, 'objectUri') });
 
 export const mdToExecutionConfiguration = (mdObj) => {
     const { measures, categories, filters } = mdObj;
@@ -274,8 +274,8 @@ export const mdToExecutionConfiguration = (mdObj) => {
         return generatedMetricDefinition(metric);
     });
     const attributeMetrics = map(filter(measures, m => m.type === 'attribute' && !m.showInPercent), generatedMetricDefinition);
-    const attributeFilters = map(filter(filters, ({listAttributeFilter}) => listAttributeFilter !== undefined), attributeFilterToWhere);
-    const dateFilters = map(filter(filters, ({dateFilterSettings}) => dateFilterSettings !== undefined), dateFilterToWhere);
+    const attributeFilters = map(filter(filters, ({ listAttributeFilter }) => listAttributeFilter !== undefined), attributeFilterToWhere);
+    const dateFilters = map(filter(filters, ({ dateFilterSettings }) => dateFilterSettings !== undefined), dateFilterToWhere);
 
     const allMetrics = [].concat(
         attributes,
