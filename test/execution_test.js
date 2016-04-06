@@ -593,5 +593,56 @@ describe('execution', () => {
                 );
             });
         });
+
+        describe('generating pop metric', () => {
+            let mdObj;
+            beforeEach(() => {
+                mdObj = {
+                    'measures': [
+                        {
+                            'type': 'metric',
+                            'objectUri': '/gdc/md/qamfsd9cw85e53mcqs74k8a0mwbf5gc2/obj/2825',
+                            'title': '# of Opportunities',
+                            'format': '#,##0',
+                            'metricAttributeFilters': [],
+                            'showInPercent': false,
+                            'showPoP': true
+                        }
+                    ],
+                    'categories': [
+                        {
+                            'type': 'date',
+                            'collection': 'attribute',
+                            'displayForm': '/gdc/md/qamfsd9cw85e53mcqs74k8a0mwbf5gc2/obj/1234'
+                        }
+                    ],
+                    'filters': [],
+                    'stacks': []
+                };
+            });
+
+            it.only('for calculated metric', () => {
+                const execConfig = ex.mdToExecutionConfiguration(mdObj);
+                console.log(execConfig.execution.definitions[0].metricDefinition);
+                expect(execConfig).to.eql({
+                    execution: {
+                        columns: [
+                            '/gdc/md/qamfsd9cw85e53mcqs74k8a0mwbf5gc2/obj/1234',
+                            'metric_qamfsd9cw85e53mcqs74k8a0mwbf5gc2_2825.generated.pop.10ac32a3abdbfb160d7cf890df337903',
+                            '/gdc/md/qamfsd9cw85e53mcqs74k8a0mwbf5gc2/obj/2825'
+                        ],
+                        where: {},
+                        definitions: [{
+                            metricDefinition: {
+                                'title': '# of Opportunities - previous year',
+                                'identifier': 'metric_qamfsd9cw85e53mcqs74k8a0mwbf5gc2_2825.generated.pop.10ac32a3abdbfb160d7cf890df337903',
+                                'expression': 'SELECT (SELECT [/gdc/md/qamfsd9cw85e53mcqs74k8a0mwbf5gc2/obj/2825]) FOR PREVIOUS ([/gdc/md/qamfsd9cw85e53mcqs74k8a0mwbf5gc2/obj/1234])',
+                                'format': '#,##0'
+                            }
+                        }]
+                    }
+                });
+            });
+        });
     });
 });

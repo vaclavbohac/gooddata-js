@@ -135,6 +135,9 @@ const getGeneratedMetricIdentifier = (item, useBasicAggregation = true, expressi
     if (get(item, 'showInPercent') && !useBasicAggregation) {
         aggregation = 'percent';
     }
+    if (get(item, 'showPoP') && !useBasicAggregation) {
+        aggregation = 'pop';
+    }
     const [, , , prjId, , id] = get(item, 'objectUri').split('/');
     const identifier = `${prjId}_${id}`;
     const hash = hasher(expressionCreator(item));
@@ -195,6 +198,36 @@ const contributionMetricDefinition = (attribute, item) => {
     return result;
 };
 
+const getPoPExpresssion = (attribute, metricId) => {
+    const dateUri = get(attribute, 'displayForm');
+
+    return `SELECT (SELECT ${metricId}) FOR PREVIOUS ([${dateUri}])`;
+};
+
+const popMetricDefinition = (attribute, item) => {
+    const title = `${get(item, 'title')} - previous year`;
+    const format = get(item, 'format');
+    const hasher = partial(getGeneratedMetricHash, title, format);
+
+    const getMetricExpression = partial(getPoPExpresssion, attribute, `[${get(item, 'objectUri')}]`);
+
+    const identifier = getGeneratedMetricIdentifier(item, false, getMetricExpression, hasher);
+
+    const result = [{
+        element: identifier,
+        definition: {
+            metricDefinition: {
+                identifier,
+                expression: getPoPExpresssion(attribute, `[${get(item, 'objectUri')}]`),
+                title,
+                format
+            }
+        }
+    }];
+
+    return result;
+};
+
 const categoryToElement = c => {
     return { element: get(c, 'displayForm') };
 };
@@ -228,6 +261,10 @@ export const mdToExecutionConfiguration = (mdObj) => {
         filter(measures, m => m.showInPercent),
         partial(contributionMetricDefinition, find(categories, c => c.collection === 'attribute'))
     );
+    const popMetrics = map(
+        filter(measures, m => m.showPoP),
+        partial(popMetricDefinition, find(categories, c => c.type === 'date'))
+    );
     const factMetrics = map(filter(measures, m => m.type === 'fact' && !m.showInPercent), generatedMetricDefinition);
     const metrics = map(filter(measures, m => m.type === 'metric' && !m.showInPercent), metric => {
         if (isEmpty(metric.metricAttributeFilters)) {
@@ -244,6 +281,7 @@ export const mdToExecutionConfiguration = (mdObj) => {
         attributes,
         factMetrics,
         attributeMetrics,
+        flatten(popMetrics),
         metrics,
         flatten(contributionMetrics)
     );
