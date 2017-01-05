@@ -49,7 +49,7 @@ title: foobar
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <strong>gooddata-js</strong> <span class="version">v1.0.0</span>
+                        <strong>gooddata-js</strong> <span class="version">v1.0.4</span>
                         <h1 class="file-heading">File: src/catalogue.js</h1>
                         
                         <div class="file">
@@ -70,13 +70,13 @@ title: foobar
                             includeAvailableDateAttributes: true
                         };
                         
-                        const parseCategories = (bucketItems) =&gt; (
+                        const parseCategories = bucketItems =&gt; (
                             get(bucketItems, &#x27;categories&#x27;).map(({ category }) =&gt; ({
-                                    category: {
-                                        ...category,
-                                        displayForm: get(category, &#x27;attribute&#x27;)
-                                    }
-                                })
+                                category: {
+                                    ...category,
+                                    displayForm: get(category, &#x27;attribute&#x27;)
+                                }
+                            })
                             )
                         );
                         
@@ -90,7 +90,7 @@ title: foobar
                             }, options);
                             const definitions = get(executionConfig, &#x27;definitions&#x27;);
                         
-                            return get(executionConfig, &#x27;columns&#x27;).map(column =&gt; {
+                            return get(executionConfig, &#x27;columns&#x27;).map((column) =&gt; {
                                 const definition = find(definitions, ({ metricDefinition }) =&gt;
                                     get(metricDefinition, &#x27;identifier&#x27;) === column
                                 );
@@ -116,7 +116,7 @@ title: foobar
                          * &lt;/ul&gt;
                          * @returns {Object} &quot;requiredDataSets&quot; object hash.
                          */
-                        const getRequiredDataSets = options =&gt; {
+                        const getRequiredDataSets = (options) =&gt; {
                             if (get(options, &#x27;returnAllRelatedDateDataSets&#x27;)) {
                                 return {};
                             }
@@ -128,7 +128,7 @@ title: foobar
                             if (get(options, &#x27;dataSetIdentifier&#x27;)) {
                                 return { requiredDataSets: {
                                     type: &#x27;CUSTOM&#x27;,
-                                    customIdentifiers: [ get(options, &#x27;dataSetIdentifier&#x27;) ]
+                                    customIdentifiers: [get(options, &#x27;dataSetIdentifier&#x27;)]
                                 } };
                             }
                         

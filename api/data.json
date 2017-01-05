@@ -2,7 +2,7 @@
     "project": {
         "name": "gooddata",
         "description": "GoodData JavaScript SDK",
-        "version": "1.0.0",
+        "version": "1.0.4",
         "url": ""
     },
     "files": {
@@ -156,7 +156,7 @@
             "namespaces": {},
             "tag": "module",
             "file": "src/metadata.js",
-            "line": 7,
+            "line": 11,
             "description": "Functions for working with metadata objects"
         },
         "project": {
@@ -211,7 +211,7 @@
             "namespaces": {},
             "tag": "module",
             "file": "src/xhr.js",
-            "line": 12,
+            "line": 11,
             "description": "Ajax wrapper around GDC authentication mechanisms, SST and TT token handling and polling.\nInteface is same as original jQuery.ajax.\n\nIf token is expired, current request is \"paused\", token is refreshed and request is retried and result.\nis transparently returned to original call.\n\nAdditionally polling is handled. Only final result of polling returned."
         }
     },
@@ -269,7 +269,7 @@
             "module": "metadata",
             "namespace": "",
             "file": "src/metadata.js",
-            "line": 7,
+            "line": 11,
             "description": "Functions for working with metadata objects"
         },
         "project": {
@@ -324,7 +324,7 @@
             "module": "xhr",
             "namespace": "",
             "file": "src/xhr.js",
-            "line": 12,
+            "line": 11,
             "description": "Ajax wrapper around GDC authentication mechanisms, SST and TT token handling and polling.\nInteface is same as original jQuery.ajax.\n\nIf token is expired, current request is \"paused\", token is refreshed and request is retried and result.\nis transparently returned to original call.\n\nAdditionally polling is handled. Only final result of polling returned."
         }
     },
@@ -348,7 +348,7 @@
         },
         {
             "file": "src/config.js",
-            "line": 18,
+            "line": 19,
             "description": "Sets custom domain. Parameter is url which has always to be https://\n(if you don't provide it, we will do it for you).\n\nRegExp inspired taken from\nhttps://github.com/jarib/google-closure-library/blob/master/closure/goog/string/linkify.js",
             "params": [
                 {
@@ -386,7 +386,7 @@
                 },
                 {
                     "name": "settings",
-                    "description": "- AJAX settings",
+                    "description": "- Set \"extended\" to true to retrieve the result\n                           including internal attribute IDs (useful to construct filters\n                           for subsequent report execution requests).\n                            Supports additional settings accepted by the underlying\n                            xhr.ajax() calls",
                     "type": "Object"
                 }
             ],
@@ -399,7 +399,7 @@
         },
         {
             "file": "src/metadata.js",
-            "line": 14,
+            "line": 18,
             "description": "Load all objects with given uris\n(use bulk loading instead of getting objects one by one)",
             "itemtype": "method",
             "name": "getObjects",
@@ -424,7 +424,7 @@
         },
         {
             "file": "src/metadata.js",
-            "line": 52,
+            "line": 56,
             "description": "Get MD objects from using2 resource. Include only objects of given types\nand take care about fetching only nearest objects if requested.",
             "itemtype": "method",
             "name": "getObjectUsing",
@@ -454,7 +454,7 @@
         },
         {
             "file": "src/metadata.js",
-            "line": 90,
+            "line": 94,
             "description": "Get MD objects from using2 resource. Include only objects of given types\nand take care about fetching only nearest objects if requested.",
             "itemtype": "method",
             "name": "getObjectUsingMany",
@@ -484,7 +484,7 @@
         },
         {
             "file": "src/metadata.js",
-            "line": 128,
+            "line": 132,
             "description": "Get additional information about elements specified by their uris\n`elementUris` is the array of uris of elements to be look-up\nCurrently makes a request for each object, should be encapsulated\nto one call",
             "itemtype": "method",
             "name": "getElementDetails",
@@ -502,7 +502,7 @@
         },
         {
             "file": "src/metadata.js",
-            "line": 189,
+            "line": 196,
             "description": "Reutrns all attributes in a project specified by projectId param",
             "itemtype": "method",
             "name": "getAttributes",
@@ -521,7 +521,7 @@
         },
         {
             "file": "src/metadata.js",
-            "line": 200,
+            "line": 207,
             "description": "Returns all dimensions in a project specified by projectId param",
             "itemtype": "method",
             "name": "getDimensions",
@@ -543,7 +543,7 @@
         },
         {
             "file": "src/metadata.js",
-            "line": 212,
+            "line": 219,
             "description": "Returns project folders. Folders can be of specific types and you can specify\nthe type you need by passing and optional `type` parameter",
             "itemtype": "method",
             "name": "getFolders",
@@ -568,27 +568,7 @@
         },
         {
             "file": "src/metadata.js",
-            "line": 244,
-            "description": "Get folders with items.\nReturns array of folders, each having a title and items property which is an array of\ncorresponding items. Each item is either a metric or attribute, keeping its original\nverbose structure.",
-            "itemtype": "method",
-            "name": "getFoldersWithItems",
-            "params": [
-                {
-                    "name": "type",
-                    "description": "type of folders to return",
-                    "type": "String"
-                }
-            ],
-            "return": {
-                "description": "Array of folder object, each containing title and\ncorresponding items.",
-                "type": "Array"
-            },
-            "class": "metadata",
-            "module": "metadata"
-        },
-        {
-            "file": "src/metadata.js",
-            "line": 385,
+            "line": 253,
             "description": "Returns all facts in a project specified by the given projectId",
             "itemtype": "method",
             "name": "getFacts",
@@ -607,7 +587,7 @@
         },
         {
             "file": "src/metadata.js",
-            "line": 396,
+            "line": 264,
             "description": "Returns all metrics in a project specified by the given projectId",
             "itemtype": "method",
             "name": "getMetrics",
@@ -626,7 +606,7 @@
         },
         {
             "file": "src/metadata.js",
-            "line": 407,
+            "line": 275,
             "description": "Returns all metrics that are reachable (with respect to ldm of the project\nspecified by the given projectId) for given attributes",
             "itemtype": "method",
             "name": "getAvailableMetrics",
@@ -655,7 +635,7 @@
         },
         {
             "file": "src/metadata.js",
-            "line": 425,
+            "line": 293,
             "description": "Returns all attributes that are reachable (with respect to ldm of the project\nspecified by the given projectId) for given metrics (also called as drillCrossPath)",
             "itemtype": "method",
             "name": "getAvailableAttributes",
@@ -684,7 +664,7 @@
         },
         {
             "file": "src/metadata.js",
-            "line": 443,
+            "line": 311,
             "description": "Returns all attributes that are reachable (with respect to ldm of the project\nspecified by the given projectId) for given metrics (also called as drillCrossPath)",
             "itemtype": "method",
             "name": "getAvailableFacts",
@@ -713,7 +693,7 @@
         },
         {
             "file": "src/metadata.js",
-            "line": 461,
+            "line": 329,
             "description": "Get details of a metadata object specified by its uri",
             "itemtype": "method",
             "name": "getObjectDetails",
@@ -732,7 +712,27 @@
         },
         {
             "file": "src/metadata.js",
-            "line": 472,
+            "line": 340,
+            "description": "Get folders with items.\nReturns array of folders, each having a title and items property which is an array of\ncorresponding items. Each item is either a metric or attribute, keeping its original\nverbose structure.",
+            "itemtype": "method",
+            "name": "getFoldersWithItems",
+            "params": [
+                {
+                    "name": "type",
+                    "description": "type of folders to return",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "Array of folder object, each containing title and\ncorresponding items.",
+                "type": "Array"
+            },
+            "class": "metadata",
+            "module": "metadata"
+        },
+        {
+            "file": "src/metadata.js",
+            "line": 485,
             "description": "Get identifier of a metadata object identified by its uri",
             "itemtype": "method",
             "name": "getObjectIdentifier",
@@ -751,7 +751,7 @@
         },
         {
             "file": "src/metadata.js",
-            "line": 498,
+            "line": 511,
             "description": "Get uri of an metadata object, specified by its identifier and project id it belongs to",
             "itemtype": "method",
             "name": "getObjectUri",
@@ -975,7 +975,7 @@
         },
         {
             "file": "src/xhr.js",
-            "line": 29,
+            "line": 28,
             "description": "Back compatible method for setting common XHR settings\n\nUsually in our apps we used beforeSend ajax callback to set the X-GDC-REQUEST header with unique ID.",
             "params": [
                 {
@@ -988,7 +988,7 @@
         },
         {
             "file": "src/xhr.js",
-            "line": 113,
+            "line": 137,
             "params": [
                 {
                     "name": "response",
@@ -1005,7 +1005,7 @@
         },
         {
             "file": "src/xhr.js",
-            "line": 119,
+            "line": 143,
             "params": [
                 {
                     "name": "response",
@@ -1022,7 +1022,7 @@
         },
         {
             "file": "src/xhr.js",
-            "line": 216,
+            "line": 217,
             "description": "Wrapper for xhr.ajax method GET",
             "itemtype": "method",
             "name": "get",
@@ -1031,7 +1031,7 @@
         },
         {
             "file": "src/xhr.js",
-            "line": 226,
+            "line": 227,
             "description": "Wrapper for xhr.ajax method POST",
             "itemtype": "method",
             "name": "post",
@@ -1040,7 +1040,7 @@
         },
         {
             "file": "src/xhr.js",
-            "line": 232,
+            "line": 233,
             "description": "Wrapper for xhr.ajax method PUT",
             "itemtype": "method",
             "name": "put",
@@ -1059,15 +1059,15 @@
         },
         {
             "message": "Missing item type\nBack compatible method for setting common XHR settings\n\nUsually in our apps we used beforeSend ajax callback to set the X-GDC-REQUEST header with unique ID.",
-            "line": " src/xhr.js:29"
+            "line": " src/xhr.js:28"
         },
         {
             "message": "Missing item type",
-            "line": " src/xhr.js:113"
+            "line": " src/xhr.js:137"
         },
         {
             "message": "Missing item type",
-            "line": " src/xhr.js:119"
+            "line": " src/xhr.js:143"
         }
     ]
 }

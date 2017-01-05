@@ -49,16 +49,20 @@ title: foobar
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <strong>gooddata-js</strong> <span class="version">v1.0.0</span>
+                        <strong>gooddata-js</strong> <span class="version">v1.0.4</span>
                         <h1 class="file-heading">File: src/metadata.js</h1>
                         
                         <div class="file">
                             <pre class="code prettyprint linenums">
                         // Copyright (C) 2007-2014, GoodData(R) Corporation. All rights reserved.
-                        import { isPlainObject } from &#x27;lodash&#x27;;
+                        import {
+                            isPlainObject,
+                            get as _get,
+                            chunk,
+                            flatten
+                        } from &#x27;lodash&#x27;;
                         import { ajax, get, post, parseJSON } from &#x27;./xhr&#x27;;
                         import { getIn } from &#x27;./util&#x27;;
-                        import { get as _get, chunk, flatten } from &#x27;lodash&#x27;;
                         
                         /**
                          * Functions for working with metadata objects
@@ -82,7 +86,7 @@ title: foobar
                         
                             const objectsUrisChunks = chunk(objectUris, LIMIT);
                         
-                            const promises = objectsUrisChunks.map(objectUrisChunk =&gt; {
+                            const promises = objectsUrisChunks.map((objectUrisChunk) =&gt; {
                                 const data = {
                                     get: {
                                         items: objectUrisChunk
@@ -91,7 +95,7 @@ title: foobar
                         
                                 return post(uri, {
                                     data: JSON.stringify(data)
-                                }).then(r =&gt; {
+                                }).then((r) =&gt; {
                                     if (!r.ok) {
                                         const err = new Error(r.statusText);
                                         err.response = r;
@@ -132,7 +136,7 @@ title: foobar
                         
                             return post(resourceUri, {
                                 data: JSON.stringify(data)
-                            }).then(r =&gt; {
+                            }).then((r) =&gt; {
                                 if (!r.ok) {
                                     const err = new Error(r.statusText);
                                     err.response = r;
@@ -170,7 +174,7 @@ title: foobar
                         
                             return post(resourceUri, {
                                 data: JSON.stringify(data)
-                            }).then(r =&gt; {
+                            }).then((r) =&gt; {
                                 if (!r.ok) {
                                     const err = new Error(r.statusText);
                                     err.response = r;
@@ -195,7 +199,7 @@ title: foobar
                             const fns = elementUris.map(uri =&gt; get(uri));
                         
                             return Promise.all(fns).then((...args) =&gt; {
-                                const enriched = args.map(element =&gt; {
+                                const enriched = args.map((element) =&gt; {
                                     const root = element[0];
                                     if (root.attributeDisplayForm) {
                                         return {
@@ -211,6 +215,8 @@ title: foobar
                                             name: root.metric.meta.title
                                         };
                                     }
+                        
+                                    return undefined;
                                 });
                         
                                 // override titles with related attribute title
@@ -223,7 +229,8 @@ title: foobar
                                     if (el.formOf) {
                                         formOfFns.push(get(el.formOf));
                                         ids[el.uri] = idx;
-                                        indi[i++] = idx;
+                                        indi[i] = idx;
+                                        i += 1;
                                     }
                                 });
                         
@@ -250,7 +257,7 @@ title: foobar
                         * @return {Array} An array of attribute objects
                         */
                         export function getAttributes(projectId) {
-                            return get(&#x27;/gdc/md/&#x27; + projectId + &#x27;/query/attributes&#x27;).then(r =&gt; r.ok ? r.json() : r).then(getIn(&#x27;query.entries&#x27;));
+                            return get(&#x60;/gdc/md/${projectId}/query/attributes&#x60;).then(r =&gt; (r.ok ? r.json() : r)).then(getIn(&#x27;query.entries&#x27;));
                         }
                         
                         /**
@@ -262,7 +269,7 @@ title: foobar
                          * @see getFolders
                          */
                         export function getDimensions(projectId) {
-                            return get(&#x27;/gdc/md/&#x27; + projectId + &#x27;/query/dimensions&#x27;).then(r =&gt; r.ok ? r.json() : r).then(getIn(&#x27;query.entries&#x27;));
+                            return get(&#x60;/gdc/md/${projectId}/query/dimensions&#x60;).then(r =&gt; (r.ok ? r.json() : r)).then(getIn(&#x27;query.entries&#x27;));
                         }
                         
                         /**
@@ -275,26 +282,115 @@ title: foobar
                          * @return {Array} An array of dimension objects
                          */
                         export function getFolders(projectId, type) {
-                            function _getFolders(pId, t) {
-                                const typeURL = t ? &#x27;?type=&#x27; + t : &#x27;&#x27;;
+                            function getFolderEntries(pId, t) {
+                                const typeURL = t ? &#x60;?type=${t}&#x60; : &#x27;&#x27;;
                         
-                                return get(&#x27;/gdc/md/&#x27; + pId + &#x27;/query/folders&#x27; + typeURL).then(getIn(&#x27;query.entries&#x27;));
+                                return get(&#x60;/gdc/md/${pId}/query/folders${typeURL}&#x60;).then(getIn(&#x27;query.entries&#x27;));
                             }
                         
                             switch (type) {
                                 case &#x27;fact&#x27;:
                                 case &#x27;metric&#x27;:
-                                    return _getFolders(projectId, type);
+                                    return getFolderEntries(projectId, type);
                                 case &#x27;attribute&#x27;:
                                     return getDimensions(projectId);
                                 default:
-                                    return Promise.all([_getFolders(projectId, &#x27;fact&#x27;),
-                                                 _getFolders(projectId, &#x27;metric&#x27;),
-                                                 getDimensions(projectId)])
+                                    return Promise.all([
+                                        getFolderEntries(projectId, &#x27;fact&#x27;),
+                                        getFolderEntries(projectId, &#x27;metric&#x27;),
+                                        getDimensions(projectId)
+                                    ])
                                     .then((facts, metrics, attributes) =&gt; {
                                         return { fact: facts, metric: metrics, attribute: attributes };
                                     });
                             }
+                        }
+                        
+                        /**
+                         * Returns all facts in a project specified by the given projectId
+                         *
+                         * @method getFacts
+                         * @param projectId Project identifier
+                         * @return {Array} An array of fact objects
+                         */
+                        export function getFacts(projectId) {
+                            return get(&#x60;/gdc/md/${projectId}/query/facts&#x60;).then(r =&gt; (r.ok ? r.json() : r)).then(getIn(&#x27;query.entries&#x27;));
+                        }
+                        
+                        /**
+                         * Returns all metrics in a project specified by the given projectId
+                         *
+                         * @method getMetrics
+                         * @param projectId Project identifier
+                         * @return {Array} An array of metric objects
+                         */
+                        export function getMetrics(projectId) {
+                            return get(&#x60;/gdc/md/${projectId}/query/metrics&#x60;).then(r =&gt; (r.ok ? r.json() : r)).then(getIn(&#x27;query.entries&#x27;));
+                        }
+                        
+                        /**
+                         * Returns all metrics that are reachable (with respect to ldm of the project
+                         * specified by the given projectId) for given attributes
+                         *
+                         * @method getAvailableMetrics
+                         * @param {String} projectId - Project identifier
+                         * @param {Array} attrs - An array of attribute uris for which we want to get
+                         * availabale metrics
+                         * @return {Array} An array of reachable metrics for the given attrs
+                         * @see getAvailableAttributes
+                         * @see getAvailableFacts
+                         */
+                        export function getAvailableMetrics(projectId, attrs) {
+                            return post(&#x60;/gdc/md/${projectId}/availablemetrics&#x60;, {
+                                data: JSON.stringify(attrs)
+                            }).then(r =&gt; (r.ok ? r.json() : r)).then(r =&gt; r.entries);
+                        }
+                        
+                        /**
+                         * Returns all attributes that are reachable (with respect to ldm of the project
+                         * specified by the given projectId) for given metrics (also called as drillCrossPath)
+                         *
+                         * @method getAvailableAttributes
+                         * @param {String} projectId - Project identifier
+                         * @param {Array} metrics - An array of metric uris for which we want to get
+                         * availabale attributes
+                         * @return {Array} An array of reachable attributes for the given metrics
+                         * @see getAvailableMetrics
+                         * @see getAvailableFacts
+                         */
+                        export function getAvailableAttributes(projectId, metrics) {
+                            return post(&#x60;/gdc/md/${projectId}/drillcrosspaths&#x60;, {
+                                body: JSON.stringify(metrics)
+                            }).then(r =&gt; (r.ok ? r.json() : r)).then(r =&gt; r.drillcrosspath.links);
+                        }
+                        
+                        /**
+                         * Returns all attributes that are reachable (with respect to ldm of the project
+                         * specified by the given projectId) for given metrics (also called as drillCrossPath)
+                         *
+                         * @method getAvailableFacts
+                         * @param {String} projectId - Project identifier
+                         * @param {Array} items - An array of metric or attribute uris for which we want to get
+                         * availabale facts
+                         * @return {Array} An array of reachable facts for the given items
+                         * @see getAvailableAttributes
+                         * @see getAvailableMetrics
+                         */
+                        export function getAvailableFacts(projectId, items) {
+                            return post(&#x60;/gdc/md/${projectId}/availablefacts&#x60;, {
+                                data: JSON.stringify(items)
+                            }).then(r =&gt; (r.ok ? r.json() : r)).then(r =&gt; r.entries);
+                        }
+                        
+                        /**
+                         * Get details of a metadata object specified by its uri
+                         *
+                         * @method getObjectDetails
+                         * @param uri uri of the metadata object for which details are to be retrieved
+                         * @return {Object} object details
+                         */
+                        export function getObjectDetails(uri) {
+                            return get(uri);
                         }
                         
                         /**
@@ -308,7 +404,7 @@ title: foobar
                          * @return {Array} Array of folder object, each containing title and
                          * corresponding items.
                          */
-                        /*eslint-disable*/
+                        
                         export function getFoldersWithItems(projectId, type) {
                             // fetch all folders of given type and process them
                             return getFolders(projectId, type).then((folders) =&gt; {
@@ -323,15 +419,15 @@ title: foobar
                         
                                 // helper mapBy function
                                 function mapBy(array, key) {
-                                    return array.map(function mapKeyToItem(item) {
+                                    return array.map((item) =&gt; {
                                         return item[key];
                                     });
                                 }
                         
                                 // helper for sorting folder tree structure
                                 // sadly @returns void (sorting == mutating array in js)
-                                const sortFolderTree = structure =&gt; {
-                                    structure.forEach(folder =&gt; {
+                                const sortFolderTree = (structure) =&gt; {
+                                    structure.forEach((folder) =&gt; {
                                         folder.items.sort((a, b) =&gt; {
                                             if (a.meta.title &lt; b.meta.title) {
                                                 return -1;
@@ -363,11 +459,11 @@ title: foobar
                                     // identifier. If passing unsupported type, reject immediately.
                                     if (type === &#x27;attribute&#x27;) {
                                         // get all attributes, subtract what we have and add rest in unsorted folder
-                                        getAttributes(projectId).then(attributes =&gt; {
+                                        getAttributes(projectId).then((attributes) =&gt; {
                                             // get uris of attributes which are in some dimension folders
                                             const attributesInFolders = [];
-                                            folderDetails.forEach(fd =&gt; {
-                                                fd.dimension.content.attributes.forEach(attr =&gt; {
+                                            folderDetails.forEach((fd) =&gt; {
+                                                fd.dimension.content.attributes.forEach((attr) =&gt; {
                                                     attributesInFolders.push(attr.meta.uri);
                                                 });
                                             });
@@ -377,34 +473,35 @@ title: foobar
                                                     .filter(item =&gt; attributesInFolders.indexOf(item.link) === -1)
                                                     .map(item =&gt; item.link);
                                             // now get details of attributes in no folders
-                                            return Promise.all(unsortedUris.map(getObjectDetails)).then((...unsortedAttributeArgs) =&gt; { //TODO add map to r.json
-                                                // get unsorted attribute objects
-                                                const unsortedAttributes = unsortedAttributeArgs.map(attr =&gt; attr.attribute);
-                                                // create structure of folders with attributes
-                                                const structure = folderDetails.map(folderDetail =&gt; {
-                                                    return {
-                                                        title: folderDetail.dimension.meta.title,
-                                                        items: folderDetail.dimension.content.attributes
-                                                    };
-                                                });
-                                                // and append &quot;Unsorted&quot; folder with attributes to the structure
-                                                structure.push({
-                                                    title: &quot;Unsorted&quot;,
-                                                    items: unsortedAttributes
-                                                });
-                                                sortFolderTree(structure);
+                                            return Promise.all(unsortedUris.map(getObjectDetails))
+                                                .then((...unsortedAttributeArgs) =&gt; { // TODO add map to r.json
+                                                    // get unsorted attribute objects
+                                                    const unsortedAttributes = unsortedAttributeArgs.map(attr =&gt; attr.attribute);
+                                                    // create structure of folders with attributes
+                                                    const structure = folderDetails.map((folderDetail) =&gt; {
+                                                        return {
+                                                            title: folderDetail.dimension.meta.title,
+                                                            items: folderDetail.dimension.content.attributes
+                                                        };
+                                                    });
+                                                    // and append &quot;Unsorted&quot; folder with attributes to the structure
+                                                    structure.push({
+                                                        title: &#x27;Unsorted&#x27;,
+                                                        items: unsortedAttributes
+                                                    });
+                                                    sortFolderTree(structure);
                         
-                                                return structure;
-                                            });
+                                                    return structure;
+                                                });
                                         });
                                     } else if (type === &#x27;metric&#x27;) {
                                         const entriesLinks = folderDetails.map(entry =&gt; mapBy(entry.folder.content.entries, &#x27;link&#x27;));
                                         // get all metrics, subtract what we have and add rest in unsorted folder
-                                        return getMetrics(projectId).then(metrics =&gt; {
+                                        return getMetrics(projectId).then((metrics) =&gt; {
                                             // get uris of metrics which are in some dimension folders
                                             const metricsInFolders = [];
-                                            folderDetails.forEach(fd =&gt; {
-                                                fd.folder.content.entries.forEach(metric =&gt; {
+                                            folderDetails.forEach((fd) =&gt; {
+                                                fd.folder.content.entries.forEach((metric) =&gt; {
                                                     metricsInFolders.push(metric.link);
                                                 });
                                             });
@@ -418,111 +515,27 @@ title: foobar
                                             entriesLinks.push(unsortedUris);
                         
                                             // now get details of all metrics
-                                            return Promise.all(entriesLinks.map((linkArray, idx) =&gt; getMetricItemsDetails(linkArray))).then((...tree) =&gt; { //TODO add map to r.json
-                                                // all promises resolved, i.e. details for each metric are available
-                                                const structure = tree.map((treeItems, idx) =&gt; {
-                                                    // if idx is not in foldes list than metric is in &quot;Unsorted&quot; folder
-                                                    return {
-                                                        title: (foldersTitles[idx] || &quot;Unsorted&quot;),
-                                                        items: treeItems
-                                                    };
+                                            return Promise.all(entriesLinks.map(linkArray =&gt; getMetricItemsDetails(linkArray)))
+                                                .then((...tree) =&gt; { // TODO add map to r.json
+                                                    // all promises resolved, i.e. details for each metric are available
+                                                    const structure = tree.map((treeItems, idx) =&gt; {
+                                                        // if idx is not in foldes list than metric is in &quot;Unsorted&quot; folder
+                                                        return {
+                                                            title: (foldersTitles[idx] || &#x27;Unsorted&#x27;),
+                                                            items: treeItems
+                                                        };
+                                                    });
+                                                    sortFolderTree(structure);
+                                                    return structure;
                                                 });
-                                                sortFolderTree(structure);
-                                                return structure
-                                            });
                                         });
                                     } else {
                                         return Promise.reject();
                                     }
+                        
+                                    return undefined;
                                 });
                             });
-                        }
-                        
-                        /**
-                         * Returns all facts in a project specified by the given projectId
-                         *
-                         * @method getFacts
-                         * @param projectId Project identifier
-                         * @return {Array} An array of fact objects
-                         */
-                        export function getFacts(projectId) {
-                            return get(&#x27;/gdc/md/&#x27; + projectId + &#x27;/query/facts&#x27;).then(r =&gt; r.ok ? r.json() : r).then(getIn(&#x27;query.entries&#x27;));
-                        }
-                        
-                        /**
-                         * Returns all metrics in a project specified by the given projectId
-                         *
-                         * @method getMetrics
-                         * @param projectId Project identifier
-                         * @return {Array} An array of metric objects
-                         */
-                        export function getMetrics(projectId) {
-                            return get(&#x27;/gdc/md/&#x27; + projectId + &#x27;/query/metrics&#x27;).then(r =&gt; r.ok ? r.json() : r).then(getIn(&#x27;query.entries&#x27;));
-                        }
-                        
-                        /**
-                         * Returns all metrics that are reachable (with respect to ldm of the project
-                         * specified by the given projectId) for given attributes
-                         *
-                         * @method getAvailableMetrics
-                         * @param {String} projectId - Project identifier
-                         * @param {Array} attrs - An array of attribute uris for which we want to get
-                         * availabale metrics
-                         * @return {Array} An array of reachable metrics for the given attrs
-                         * @see getAvailableAttributes
-                         * @see getAvailableFacts
-                         */
-                        export function getAvailableMetrics(projectId, attrs) {
-                            return post(&#x27;/gdc/md/&#x27; + projectId + &#x27;/availablemetrics&#x27;, {
-                                data: JSON.stringify(attrs)
-                            }).then(r =&gt; r.ok ? r.json() : r).then(r =&gt; r.entries)
-                        }
-                        
-                        /**
-                         * Returns all attributes that are reachable (with respect to ldm of the project
-                         * specified by the given projectId) for given metrics (also called as drillCrossPath)
-                         *
-                         * @method getAvailableAttributes
-                         * @param {String} projectId - Project identifier
-                         * @param {Array} metrics - An array of metric uris for which we want to get
-                         * availabale attributes
-                         * @return {Array} An array of reachable attributes for the given metrics
-                         * @see getAvailableMetrics
-                         * @see getAvailableFacts
-                         */
-                        export function getAvailableAttributes(projectId, metrics) {
-                            return post(&#x27;/gdc/md/&#x27; + projectId + &#x27;/drillcrosspaths&#x27;, {
-                                body: JSON.stringify(metrics)
-                            }).then(r =&gt; r.ok ? r.json() : r).then(r =&gt; r.drillcrosspath.links);
-                        }
-                        
-                        /**
-                         * Returns all attributes that are reachable (with respect to ldm of the project
-                         * specified by the given projectId) for given metrics (also called as drillCrossPath)
-                         *
-                         * @method getAvailableFacts
-                         * @param {String} projectId - Project identifier
-                         * @param {Array} items - An array of metric or attribute uris for which we want to get
-                         * availabale facts
-                         * @return {Array} An array of reachable facts for the given items
-                         * @see getAvailableAttributes
-                         * @see getAvailableMetrics
-                         */
-                        export function getAvailableFacts(projectId, items) {
-                            return post(&#x27;/gdc/md/&#x27; + projectId + &#x27;/availablefacts&#x27;, {
-                                data: JSON.stringify(items)
-                            }).then(r =&gt; r.ok ? r.json() : r).then(r =&gt; r.entries);
-                        }
-                        
-                        /**
-                         * Get details of a metadata object specified by its uri
-                         *
-                         * @method getObjectDetails
-                         * @param uri uri of the metadata object for which details are to be retrieved
-                         * @return {Object} object details
-                         */
-                        export function getObjectDetails(uri) {
-                            return get(uri);
                         }
                         
                         /**
@@ -565,23 +578,23 @@ title: foobar
                                 return data.meta.uri;
                             }
                         
-                            return ajax(&#x27;/gdc/md/&#x27; + projectId + &#x27;/identifiers&#x27;, {
+                            return ajax(&#x60;/gdc/md/${projectId}/identifiers&#x60;, {
                                 method: &#x27;POST&#x27;,
                                 body: {
                                     identifierToUri: [identifier]
                                 }
-                            }).then(parseJSON).then(data =&gt; {
+                            }).then(parseJSON).then((data) =&gt; {
                                 const found = data.identifiers.filter(i =&gt; i.identifier === identifier);
                         
                                 if (found[0]) {
                                     return getObjectDetails(found[0].uri);
                                 }
                                 throw new Error(&#x60;Object with identifier ${identifier} not found in project ${projectId}&#x60;);
-                            }).then(objData =&gt; {
+                            }).then((objData) =&gt; {
                                 if (!objData.attributeDisplayForm) {
                                     return uriFinder(objData);
                                 }
-                                return getObjectDetails(objData.attributeDisplayForm.content.formOf).then(objectData =&gt; {
+                                return getObjectDetails(objData.attributeDisplayForm.content.formOf).then((objectData) =&gt; {
                                     return uriFinder(objectData);
                                 });
                             });

@@ -49,14 +49,12 @@ title: foobar
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <strong>gooddata-js</strong> <span class="version">v1.0.0</span>
+                        <strong>gooddata-js</strong> <span class="version">v1.0.4</span>
                         <h1 class="file-heading">File: src/xhr.js</h1>
                         
                         <div class="file">
                             <pre class="code prettyprint linenums">
                         // Copyright (C) 2007-2013, GoodData(R) Corporation. All rights reserved.
-                        /*eslint block-scoped-var:0 no-use-before-define: [2, &quot;nofunc&quot;]*/ // TODO enable block-scoped-vars
-                        import * as config from &#x27;./config&#x27;;
                         import {
                             isPlainObject,
                             isFunction,
@@ -64,6 +62,7 @@ title: foobar
                             merge
                         } from &#x27;lodash&#x27;;
                         import &#x27;isomorphic-fetch&#x27;;
+                        import * as config from &#x27;./config&#x27;;
                         
                         /**
                          * Ajax wrapper around GDC authentication mechanisms, SST and TT token handling and polling.
@@ -105,8 +104,9 @@ title: foobar
                             }
                         }
                         
-                        function enrichSettingWithCustomDomain(originalUrl, settings, domain) {
+                        function enrichSettingWithCustomDomain(originalUrl, originalSettings, domain) {
                             let url = originalUrl;
+                            const settings = originalSettings;
                             if (domain) {
                                 // protect url to be prepended with domain on retry
                                 if (originalUrl.indexOf(domain) === -1) {
@@ -120,7 +120,7 @@ title: foobar
                         }
                         
                         function continueAfterTokenRequest(url, settings) {
-                            return tokenRequest.then(response =&gt; {
+                            return tokenRequest.then((response) =&gt; {
                                 if (!response.ok) {
                                     const err = new Error(&#x27;Unauthorized&#x27;);
                                     err.response = response;
@@ -128,11 +128,35 @@ title: foobar
                                 }
                                 tokenRequest = null;
                         
-                                return ajax(url, settings);
-                            }, reason =&gt; {
+                                return ajax(url, settings); // eslint-disable-line no-use-before-define
+                            }, (reason) =&gt; {
                                 tokenRequest = null;
                                 return reason;
                             });
+                        }
+                        
+                        function createSettings(customSettings) {
+                            const headers = new Headers({
+                                Accept: &#x27;application/json; charset=utf-8&#x27;,
+                                &#x27;Content-Type&#x27;: &#x27;application/json&#x27;
+                            });
+                        
+                            const settings = Object.assign({}, commonXhrSettings, customSettings);
+                        
+                            settings.pollDelay = (settings.pollDelay !== undefined) ? settings.pollDelay : DEFAULT_POLL_DELAY;
+                        
+                            settings.headers = headers;
+                        
+                            // TODO jquery compat - add to warnings
+                            settings.body = (settings.data) ? settings.data : settings.body;
+                            settings.mode = &#x27;same-origin&#x27;;
+                            settings.credentials = &#x27;same-origin&#x27;;
+                        
+                            if (isPlainObject(settings.body)) {
+                                settings.body = JSON.stringify(settings.body);
+                            }
+                        
+                            return settings;
                         }
                         
                         function handleUnauthorized(originalUrl, originalSettings) {
@@ -141,7 +165,7 @@ title: foobar
                                 // If token request exist, just listen for it&#x27;s end.
                                 const { url, settings } = enrichSettingWithCustomDomain(&#x27;/gdc/account/token&#x27;, createSettings({}), config.domain);
                         
-                                tokenRequest = fetch(url, settings).then(response =&gt; {
+                                tokenRequest = fetch(url, settings).then((response) =&gt; {
                                     // tokenRequest = null;
                                     // TODO jquery compat - allow to attach unauthorized callback and call it if attached
                                     // if ((xhrObj.status === 401) &amp;&amp; (isFunction(req.unauthorized))) {
@@ -170,7 +194,7 @@ title: foobar
                          * @param {Response} response
                          * @return {Promise} promise which resolves to result JSON ()
                          */
-                        export const parseJSON = (response) =&gt; response.json();
+                        export const parseJSON = response =&gt; response.json();
                         
                         /**
                          * @param {Response} response see https://developer.mozilla.org/en-US/docs/Web/API/Response
@@ -190,6 +214,14 @@ title: foobar
                             throw error;
                         };
                         
+                        function handlePolling(url, settings) {
+                            return new Promise((resolve, reject) =&gt; {
+                                setTimeout(() =&gt; {
+                                    ajax(url, settings).then(resolve, reject); // eslint-disable-line no-use-before-define
+                                }, settings.pollDelay);
+                            });
+                        }
+                        
                         export function ajax(originalUrl, tempSettings = {}) {
                             const firstSettings = createSettings(tempSettings);
                             const { url, settings } = enrichSettingWithCustomDomain(originalUrl, firstSettings, config.domain);
@@ -200,7 +232,7 @@ title: foobar
                                 return continueAfterTokenRequest(url, settings);
                             }
                         
-                            return fetch(url, settings).then(response =&gt; {
+                            return fetch(url, settings).then((response) =&gt; {
                                 // If response.status id 401 and it was a login request there is no need
                                 // to cycle back for token - login does not need token and this meand you
                                 // are not authorized
@@ -230,37 +262,6 @@ title: foobar
                             }).then(checkStatus);
                         }
                         
-                        function createSettings(customSettings) {
-                            const headers = new Headers({
-                                &#x27;Accept&#x27;: &#x27;application/json; charset=utf-8&#x27;,
-                                &#x27;Content-Type&#x27;: &#x27;application/json&#x27;
-                            });
-                        
-                            const settings = Object.assign({}, commonXhrSettings, customSettings);
-                        
-                            settings.pollDelay = (settings.pollDelay !== undefined) ? settings.pollDelay : DEFAULT_POLL_DELAY;
-                        
-                            settings.headers = headers;
-                        
-                            // TODO jquery compat - add to warnings
-                            settings.body = (settings.data) ? settings.data : settings.body;
-                            settings.mode = &#x27;same-origin&#x27;;
-                            settings.credentials = &#x27;same-origin&#x27;;
-                        
-                            if (isPlainObject(settings.body)) {
-                                settings.body = JSON.stringify(settings.body);
-                            }
-                        
-                            return settings;
-                        }
-                        
-                        function handlePolling(url, settings) {
-                            return new Promise((resolve, reject) =&gt; {
-                                setTimeout(function poller() {
-                                    ajax(url, settings).then(resolve, reject);
-                                }, settings.pollDelay);
-                            });
-                        }
                         function xhrMethod(method) {
                             return function methodFn(url, settings) {
                                 const opts = merge({ method }, settings);
@@ -290,7 +291,6 @@ title: foobar
                          * @method put
                          */
                         export const put = xhrMethod(&#x27;PUT&#x27;);
-                        
                         
                             </pre>
                         </div>

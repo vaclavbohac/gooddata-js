@@ -49,7 +49,7 @@ title: foobar
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <strong>gooddata-js</strong> <span class="version">v1.0.0</span>
+                        <strong>gooddata-js</strong> <span class="version">v1.0.4</span>
                         <h1 class="file-heading">File: src/project.js</h1>
                         
                         <div class="file">
@@ -73,7 +73,7 @@ title: foobar
                          * @return {String} current project identifier
                          */
                         export function getCurrentProjectId() {
-                            return get(&#x27;/gdc/app/account/bootstrap&#x27;).then(result =&gt; {
+                            return get(&#x27;/gdc/app/account/bootstrap&#x27;).then((result) =&gt; {
                                 const currentProject = result.bootstrapResource.current.project;
                                 // handle situation in which current project is missing (e.g. new user)
                                 if (!currentProject) {
@@ -92,7 +92,7 @@ title: foobar
                          * @return {Array} An Array of projects
                          */
                         export function getProjects(profileId) {
-                            return get(&#x27;/gdc/account/profile/&#x27; + profileId + &#x27;/projects&#x27;).then((r) =&gt; {
+                            return get(&#x60;/gdc/account/profile/${profileId}/projects&#x60;).then((r) =&gt; {
                                 return r.projects.map(p =&gt; p.project);
                             });
                         }
@@ -105,28 +105,28 @@ title: foobar
                          * @return {Array} An array of objects containing datasets metadata
                          */
                         export function getDatasets(projectId) {
-                            return get(&#x27;/gdc/md/&#x27; + projectId + &#x27;/query/datasets&#x27;).then(getIn(&#x27;query.entries&#x27;));
+                            return get(&#x60;/gdc/md/${projectId}/query/datasets&#x60;).then(getIn(&#x27;query.entries&#x27;));
                         }
                         
                         const DEFAULT_PALETTE = [
-                            {r: 0x2b, g: 0x6b, b: 0xae},
-                            {r: 0x69, g: 0xaa, b: 0x51},
-                            {r: 0xee, g: 0xb1, b: 0x4c},
-                            {r: 0xd5, g: 0x3c, b: 0x38},
-                            {r: 0x89, g: 0x4d, b: 0x94},
-                            {r: 0x73, g: 0x73, b: 0x73},
-                            {r: 0x44, g: 0xa9, b: 0xbe},
-                            {r: 0x96, g: 0xbd, b: 0x5f},
-                            {r: 0xfd, g: 0x93, b: 0x69},
-                            {r: 0xe1, g: 0x5d, b: 0x86},
-                            {r: 0x7c, g: 0x6f, b: 0xad},
-                            {r: 0xa5, g: 0xa5, b: 0xa5},
-                            {r: 0x7a, g: 0xa6, b: 0xd5},
-                            {r: 0x82, g: 0xd0, b: 0x8d},
-                            {r: 0xff, g: 0xd2, b: 0x89},
-                            {r: 0xf1, g: 0x84, b: 0x80},
-                            {r: 0xbf, g: 0x90, b: 0xc6},
-                            {r: 0xbf, g: 0xbf, b: 0xbf}
+                            { r: 0x2b, g: 0x6b, b: 0xae },
+                            { r: 0x69, g: 0xaa, b: 0x51 },
+                            { r: 0xee, g: 0xb1, b: 0x4c },
+                            { r: 0xd5, g: 0x3c, b: 0x38 },
+                            { r: 0x89, g: 0x4d, b: 0x94 },
+                            { r: 0x73, g: 0x73, b: 0x73 },
+                            { r: 0x44, g: 0xa9, b: 0xbe },
+                            { r: 0x96, g: 0xbd, b: 0x5f },
+                            { r: 0xfd, g: 0x93, b: 0x69 },
+                            { r: 0xe1, g: 0x5d, b: 0x86 },
+                            { r: 0x7c, g: 0x6f, b: 0xad },
+                            { r: 0xa5, g: 0xa5, b: 0xa5 },
+                            { r: 0x7a, g: 0xa6, b: 0xd5 },
+                            { r: 0x82, g: 0xd0, b: 0x8d },
+                            { r: 0xff, g: 0xd2, b: 0x89 },
+                            { r: 0xf1, g: 0x84, b: 0x80 },
+                            { r: 0xbf, g: 0x90, b: 0xc6 },
+                            { r: 0xbf, g: 0xbf, b: 0xbf }
                         ];
                         
                         /**
@@ -139,8 +139,8 @@ title: foobar
                          * color palette
                          */
                         export function getColorPalette(projectId) {
-                            return get(&#x27;/gdc/projects/&#x27; + projectId + &#x27;/styleSettings&#x27;).then((result) =&gt; {
-                                return result.styleSettings.chartPalette.map(c =&gt; {
+                            return get(&#x60;/gdc/projects/${projectId}/styleSettings&#x60;).then((result) =&gt; {
+                                return result.styleSettings.chartPalette.map((c) =&gt; {
                                     return {
                                         r: c.fill.r,
                                         g: c.fill.g,
@@ -165,7 +165,7 @@ title: foobar
                          * Each color should be an object with r, g, b fields.
                          */
                         export function setColorPalette(projectId, colors) {
-                            return put(&#x27;/gdc/projects/&#x27; + projectId + &#x27;/styleSettings&#x27;, {
+                            return put(&#x60;/gdc/projects/${projectId}/styleSettings&#x60;, {
                                 data: {
                                     styleSettings: {
                                         chartPalette: colors.map((fill, idx) =&gt; {
@@ -189,17 +189,17 @@ title: foobar
                          * @param {String} projectId - GD project identifier
                          */
                         export function getTimezone(projectId) {
-                            const bootstrapUrl = &#x27;/gdc/app/account/bootstrap?projectId=&#x27; + projectId;
+                            const bootstrapUrl = &#x60;/gdc/app/account/bootstrap?projectId=${projectId}&#x60;;
                         
-                            return get(bootstrapUrl).then(result =&gt; {
+                            return get(bootstrapUrl).then((result) =&gt; {
                                 return result.bootstrapResource.current.timezone;
                             });
                         }
                         
                         export function setTimezone(projectId, timezone) {
-                            const timezoneServiceUrl = &#x27;/gdc/md/&#x27; + projectId + &#x27;/service/timezone&#x27;;
+                            const timezoneServiceUrl = &#x60;/gdc/md/${projectId}/service/timezone&#x60;;
                             const data = {
-                                service: { timezone: timezone }
+                                service: { timezone }
                             };
                         
                             return ajax(timezoneServiceUrl, {
