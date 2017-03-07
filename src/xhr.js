@@ -5,7 +5,6 @@ import {
     has,
     merge
 } from 'lodash';
-import 'isomorphic-fetch';
 import * as config from './config';
 
 /**
